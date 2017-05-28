@@ -1,0 +1,18 @@
+Any amount of bytes for text that starts and ends with {},
+  this is JSON data for the level and must exist even if it's empty
+  must be in UTF-8 i guess
+2 bytes for X byte size (a)
+2 bytes for Y byte size (b)
+2 bytes for thing byte size (c)
+2 bytes for thing string length byte size (d)
+a bytes for max X
+b bytes for max Y
+c bytes for amount of things
+For every unique thing:
+  c bytes for thing ID number
+  d bytes for thing identifier length (e)
+  e bytes for thing identifier
+For every placed thing:
+  a bytes for X
+  b bytes for Y
+  c bytes for thing ID
