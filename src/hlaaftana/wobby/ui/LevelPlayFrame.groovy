@@ -8,7 +8,7 @@ import java.awt.*
 
 @CompileStatic
 class LevelPlayFrame extends JFrame {
-	LevelPlayFrame(ActiveLevel l, int width, int height){
+	LevelPlayFrame(ActiveLevel l, int width, int height) {
 		setSize(width, height)
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE)
 		LevelPlayPanel panel = new LevelPlayPanel(this, l)
@@ -25,13 +25,13 @@ class LevelPlayPanel extends JPanel {
 	boolean inited
 	Thread tickingThread
 
-	LevelPlayPanel(JFrame f, ActiveLevel l){
+	LevelPlayPanel(JFrame f, ActiveLevel l) {
 		level = l
 		frame = f
 		focusable = true
 	}
 
-	def initialize(){
+	def initialize() {
 		level.initialize(this)
 		inited = true
 		tickingThread = Thread.startDaemon {
@@ -42,7 +42,7 @@ class LevelPlayPanel extends JPanel {
 		}
 	}
 
-	def tick(Graphics2D g){
+	def tick(Graphics2D g) {
 		level.tick()
 		for (it in level.things)
 			g.drawImage(it.thing.getTexture(it), canvasX + it.x, canvasY + it.y,
@@ -50,7 +50,7 @@ class LevelPlayPanel extends JPanel {
 	}
 
 	@Override
-	void paintComponent(Graphics g){
+	void paintComponent(Graphics g) {
 		super.paintComponent(g)
 		if (!inited) initialize()
 		tick((Graphics2D) g)

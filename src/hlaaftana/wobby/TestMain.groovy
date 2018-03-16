@@ -8,7 +8,7 @@ import hlaaftana.wobby.things.PlayerThing
 
 @CompileStatic
 class TestMain {
-	static main(args){
+	static main(args) {
 		for (t in new File("tiles").list()) {
 			GameData.register(new BasicThing(t, new File("tiles/$t")))
 		}

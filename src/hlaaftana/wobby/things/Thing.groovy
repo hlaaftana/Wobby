@@ -1,20 +1,20 @@
 package hlaaftana.wobby.things
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.level.ActiveLevel
-import hlaaftana.wobby.level.ActiveThing
-import hlaaftana.wobby.level.InactiveLevel
-import hlaaftana.wobby.level.InactiveThing
-import hlaaftana.wobby.level.PlacedThing
+import hlaaftana.wobby.level.*
 
 import java.awt.image.BufferedImage
 
 @CompileStatic
 abstract class Thing {
 	Map universalInterfaces = [:]
+
 	abstract String getIdentifier()
+
 	abstract BufferedImage getTexture(PlacedThing pt)
+
 	abstract int getWidth(PlacedThing pt)
+
 	abstract int getHeight(PlacedThing pt)
 
 	ActiveThing activate(ActiveLevel level, InactiveThing it) {
@@ -26,5 +26,6 @@ abstract class Thing {
 	}
 
 	void initialize(ActiveThing at) {}
+
 	void tick(ActiveThing at) {}
 }

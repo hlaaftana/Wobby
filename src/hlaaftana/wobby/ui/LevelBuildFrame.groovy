@@ -4,16 +4,15 @@ import groovy.transform.CompileStatic
 import hlaaftana.wobby.GameData
 import hlaaftana.wobby.level.InactiveLevel
 import hlaaftana.wobby.level.InactiveThing
+import hlaaftana.wobby.things.Thing
 
+import javax.swing.*
 import java.awt.*
 import java.awt.event.*
-import javax.swing.*
-
-import hlaaftana.wobby.things.Thing
 
 @CompileStatic
 class LevelBuildFrame extends JFrame {
-	LevelBuildFrame(InactiveLevel l, int width, int height){
+	LevelBuildFrame(InactiveLevel l, int width, int height) {
 		setSize(width, height)
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE)
 		LevelBuildPanel panel = new LevelBuildPanel(this, l)
@@ -159,7 +158,7 @@ class LevelBuildPanel extends JPanel {
 					else if (selectedThing) {
 						int x = e.x - canvasX
 						int y = e.y - canvasY
-						if (gridX && gridY){
+						if (gridX && gridY) {
 							x -= x % gridX
 							y -= y % gridY
 						}
@@ -192,7 +191,7 @@ class LevelBuildPanel extends JPanel {
 	}
 
 	@Override
-	void paintComponent(Graphics g){
+	void paintComponent(Graphics g) {
 		super.paintComponent(g)
 		Graphics2D g2 = (Graphics2D) g
 		for (it in level.all)

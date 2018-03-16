@@ -33,7 +33,9 @@ class Tile extends Thing implements Solidable {
 		!notSolid[x][y]
 	}
 
-	BufferedImage getTexture(PlacedThing pt){ texture }
-	int getWidth(PlacedThing pt){ texture.width }
-	int getHeight(PlacedThing pt){ texture.height }
+	BufferedImage getTexture(PlacedThing pt) { texture }
+
+	int getWidth(PlacedThing pt) { texture.width }
+
+	int getHeight(PlacedThing pt) { texture.height }
 }

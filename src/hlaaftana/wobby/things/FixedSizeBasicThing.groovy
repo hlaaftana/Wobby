@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage
 @CompileStatic
 class FixedSizeBasicThing extends BasicThing {
 	int width, height
+
 	FixedSizeBasicThing(String id, int w, int h, img) {
 		super(id, img)
 		resize(w, h)

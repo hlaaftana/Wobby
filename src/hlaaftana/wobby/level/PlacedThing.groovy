@@ -9,7 +9,7 @@ abstract class PlacedThing<L extends Level> {
 	Thing thing
 	int x, y
 
-	boolean contains(int a, int b){
+	boolean contains(int a, int b) {
 		(a >= x) && (a < (x + thing.getWidth(this))) && (b >= y) && (b < (y + thing.getHeight(this)))
 	}
 }

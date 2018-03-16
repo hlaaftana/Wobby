@@ -70,23 +70,29 @@ class InactiveLevel extends Level<InactiveThing> {
 		x as byte[]
 	}
 
-	static InactiveLevel decode(byte[] bytes){
+	static InactiveLevel decode(byte[] bytes) {
 		InactiveLevel level = new InactiveLevel()
 		def string = new String(bytes, 'UTF-8')
 		int bracks = 0
-		def currentQuote
+		char currentQuote = 0
 		boolean escaped = false
 		for (int iaa = 0; iaa < string.size(); ++iaa) {
-			if (currentQuote) {
-				if (string[iaa] == '\\') escaped = true
-				if (!escaped && string[iaa] == currentQuote) currentQuote = null
+			final ch = string.charAt(iaa)
+			if (currentQuote != 0) {
+				if (ch == ((char) '\\')) escaped = true
+				if (!escaped && ch == currentQuote) currentQuote = 0
 			} else {
-				if (string[iaa] == '"' || string[iaa] == '\''){ currentQuote = string[iaa]; continue }
-				if (string[iaa] == '{') ++bracks
-				if (string[iaa] == '}') --bracks
+				if (ch == ((char) '"') || ch == ((char) '\'')) {
+					currentQuote = ch; continue
+				} else if (ch == ((char) '{')) ++bracks
+				else if (ch == ((char) '}')) --bracks
 				if (bracks == 0) {
-					level.data = (Map<String, Object>) new JsonSlurper().parseText(string.substring(0, iaa + 1))
-					bytes = bytes.toList().drop(iaa + 1) as byte[]; break
+					++iaa
+					level.data = (Map<String, Object>) new JsonSlurper().parseText(string.substring(0, iaa))
+					def oldBytes = bytes
+					bytes = new byte[oldBytes.length - iaa]
+					System.arraycopy(oldBytes, iaa, bytes, 0, bytes.length)
+					break
 				}
 			}
 		}
@@ -101,7 +107,7 @@ class InactiveLevel extends Level<InactiveThing> {
 		level.maxY = (int) new BigInteger(ğ(i, x, ySize))
 		def tnum = new BigInteger(ğ(i, x, idSize))
 		Map<BigInteger, String> itt = [:]
-		for (int it = 0; it < tnum; ++it){
+		for (int it = 0; it < tnum; ++it) {
 			def id = new BigInteger(ğ(i, x, idSize))
 			def identifierSize = new BigInteger(ğ(i, x, identifierSizeSize))
 			def iden = new String(ğ(i, x, identifierSize), 'UTF-8')
@@ -138,7 +144,7 @@ class InactiveLevel extends Level<InactiveThing> {
 		r
 	}
 
-	InactiveThing place(int x, int y, Thing thing){
+	InactiveThing place(int x, int y, Thing thing) {
 		InactiveThing pt = thing.inactive(this, x, y)
 		if (placements.containsKey(x, y)) placements[x, y] << pt
 		else placements[x, y] = [pt]
@@ -146,7 +152,7 @@ class InactiveLevel extends Level<InactiveThing> {
 		pt
 	}
 
-	void remove(InactiveThing pt){
+	void remove(InactiveThing pt) {
 		if (null == pt) return
 		placements[pt.x, pt.y]?.removeElement(pt)
 		all.removeElement(pt)

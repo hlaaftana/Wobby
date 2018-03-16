@@ -6,11 +6,11 @@ import hlaaftana.wobby.things.BasicThing
 import hlaaftana.wobby.things.PlayerThing
 import hlaaftana.wobby.ui.LevelBuildFrame
 
-import javax.swing.JFrame
+import javax.swing.*
 
 @CompileStatic
 class Main {
-	static main(args){
+	static main(args) {
 		for (t in new File("tiles").list()) {
 			GameData.register(new BasicThing(t - '.png', new File("tiles/$t")))
 		}
