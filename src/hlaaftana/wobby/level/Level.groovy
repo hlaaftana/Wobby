@@ -1,8 +1,11 @@
 package hlaaftana.wobby.level
 
-abstract class Level {
+import groovy.transform.CompileStatic
+
+@CompileStatic
+abstract class Level<T extends PlacedThing> {
 	Map data = [:]
 	int maxX
 	int maxY
-	abstract LinkedList<PlacedThing> thingsIn(int x, int y)
+	abstract List<T> thingsIn(int x, int y)
 }

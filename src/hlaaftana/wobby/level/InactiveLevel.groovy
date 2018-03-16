@@ -2,24 +2,31 @@ package hlaaftana.wobby.level
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
 import hlaaftana.wobby.GameData
 import hlaaftana.wobby.things.Thing
 
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicInteger
 
-class InactiveLevel extends Level {
-	XYMap<LinkedList<InactiveThing>> placements = new XYMap<LinkedList<InactiveThing>>()
-	LinkedList<InactiveThing> all = []
+@CompileStatic
+class InactiveLevel extends Level<InactiveThing> {
+	XYMap<List<InactiveThing>> placements = new XYMap<List<InactiveThing>>()
+	List<InactiveThing> all = new ArrayList<>()
 
-	byte[] encode(){
-		byte[] j = JsonOutput.toJson(data).getBytes('UTF-8')
-		short a = (maxX as BigInteger).toByteArray().length
-		short b = (maxY as BigInteger).toByteArray().length
-		List<Thing> thingsaaa = all*.thing.groupBy { it.identifier }.values().collect { it[0] }
-		short c = (thingsaaa.size() as BigInteger).toByteArray().length
-		short d = (thingsaaa*.identifier.max { it.size() }.size() as BigInteger).toByteArray().length
-		println([a, b, c, d])
-		List x = []
+	byte[] encode() {
+		Byte[] j = JsonOutput.toJson(data).getBytes('UTF-8')
+		short a = (short) (maxX as BigInteger).toByteArray().length
+		short b = (short) (maxY as BigInteger).toByteArray().length
+		List<String> identifiers = new ArrayList<>()
+		identifiers.addAll(all*.thing*.identifier.toSet())
+		int largestIdentifier = 0
+		for (it in identifiers)
+			if (it.length() > largestIdentifier)
+				largestIdentifier = it.length()
+		short c = (short) (identifiers.size() as BigInteger).toByteArray().length
+		short d = (short) (largestIdentifier as BigInteger).toByteArray().length
+		List<Byte> x = new ArrayList<>()
 		x.addAll(j)
 		x.add((byte) (a >> 8))
 		x.add((byte) a)
@@ -29,29 +36,36 @@ class InactiveLevel extends Level {
 		x.add((byte) c)
 		x.add((byte) (d >> 8))
 		x.add((byte) d)
-		x.addAll((maxX as BigInteger).toByteArray())
-		x.addAll((maxY as BigInteger).toByteArray())
-		x.addAll((thingsaaa.size() as BigInteger).toByteArray())
-		Map twi = [:]
-		thingsaaa.eachWithIndex { t, Integer i ->
-			def co = t.identifier.getBytes('UTF-8')
+		x.addAll((maxX as BigInteger).toByteArray() as Byte[])
+		x.addAll((maxY as BigInteger).toByteArray() as Byte[])
+		x.addAll((identifiers.size() as BigInteger).toByteArray() as Byte[])
+		Map<String, Integer> twi = [:]
+		for (int i = 0; i < identifiers.size(); ++i) {
+			String t = identifiers[i]
+			def co = t.getBytes('UTF-8') as Byte[]
 			def ab = (co.length as BigInteger).toByteArray()
-			ab = (([0] * (d - ab.length)) + ab.toList()) as byte[]
-			x.addAll(((i + 1) as BigInteger).toByteArray())
-			x.addAll(ab)
+			def ab1 = new byte[d]
+			System.arraycopy(ab, 0, ab1, 0, d)
+			def identifierId = new byte[c]
+			System.arraycopy(((i + 1) as BigInteger).toByteArray(), 0, identifierId, 0, c)
+			x.addAll(identifierId as Byte[])
+			x.addAll(ab1 as Byte[])
 			x.addAll(co)
-			twi[t.identifier] = i + 1
+			twi[t] = i + 1
 		}
-		all.each {
+		for (it in all) {
 			def ab = (it.x as BigInteger).toByteArray()
-			ab = (([0] * (a - ab.length)) + ab.toList()) as byte[]
+			def ab1 = new byte[a]
+			System.arraycopy(ab, 0, ab1, a - ab.length, ab.length)
 			def cd = (it.y as BigInteger).toByteArray()
-			cd = (([0] * (b - cd.length)) + cd.toList()) as byte[]
+			def cd1 = new byte[b]
+			System.arraycopy(cd, 0, cd1, b - cd.length, cd.length)
 			def ef = (twi[it.thing.identifier] as BigInteger).toByteArray()
-			ef = (([0] * (c - ef.length)) + ef.toList()) as byte[]
-			x.addAll(ab)
-			x.addAll(cd)
-			x.addAll(ef)
+			def ef1 = new byte[c]
+			System.arraycopy(ef, 0, ef1, c - ef.length, ef.length)
+			x.addAll(ab1 as Byte[])
+			x.addAll(cd1 as Byte[])
+			x.addAll(ef1 as Byte[])
 		}
 		x as byte[]
 	}
@@ -62,82 +76,98 @@ class InactiveLevel extends Level {
 		int bracks = 0
 		def currentQuote
 		boolean escaped = false
-		for (int iaa = 0; iaa < string.size(); ++iaa){
-			if (currentQuote){
+		for (int iaa = 0; iaa < string.size(); ++iaa) {
+			if (currentQuote) {
 				if (string[iaa] == '\\') escaped = true
 				if (!escaped && string[iaa] == currentQuote) currentQuote = null
-			}else{
-				if (string[iaa] in ['"', '\'']){ currentQuote = string[iaa]; continue }
+			} else {
+				if (string[iaa] == '"' || string[iaa] == '\''){ currentQuote = string[iaa]; continue }
 				if (string[iaa] == '{') ++bracks
 				if (string[iaa] == '}') --bracks
 				if (bracks == 0) {
-					level.data = new JsonSlurper().parseText(string.substring(0, iaa + 1))
+					level.data = (Map<String, Object>) new JsonSlurper().parseText(string.substring(0, iaa + 1))
 					bytes = bytes.toList().drop(iaa + 1) as byte[]; break
 				}
 			}
 		}
 		ByteBuffer x = ByteBuffer.wrap(bytes)
-		int i = 0
-		short a = x.getShort(i)
-		i += 2
-		short b = x.getShort(i)
-		i += 2
-		short c = x.getShort(i)
-		i += 2
-		short d = x.getShort(i)
-		i += 2
-		level.maxX = new BigInteger((1..a).collect { x.get(i++) } as byte[])
-		level.maxY = new BigInteger((1..b).collect { x.get(i++) } as byte[])
-		def tnum = new BigInteger((1..c).collect { x.get(i++) } as byte[])
-		Map itt = [:]
+		AtomicInteger i = new AtomicInteger()
+		short xSize = x.getShort(i.get())
+		short ySize = x.getShort(i.addAndGet(2))
+		short idSize = x.getShort(i.addAndGet(2))
+		short identifierSizeSize = x.getShort(i.addAndGet(2))
+		i.addAndGet(2)
+		level.maxX = (int) new BigInteger(ğ(i, x, xSize))
+		level.maxY = (int) new BigInteger(ğ(i, x, ySize))
+		def tnum = new BigInteger(ğ(i, x, idSize))
+		Map<BigInteger, String> itt = [:]
 		for (int it = 0; it < tnum; ++it){
-			def id = new BigInteger((1..c).collect { x.get(i++) } as byte[])
-			def e = new BigInteger((1..d).collect { x.get(i++) } as byte[])
-			def iden = new String((1..e).collect { x.get(i++) } as byte[], 'UTF-8')
+			def id = new BigInteger(ğ(i, x, idSize))
+			def identifierSize = new BigInteger(ğ(i, x, identifierSizeSize))
+			def iden = new String(ğ(i, x, identifierSize), 'UTF-8')
 			itt[id] = iden
 		}
-		itt = itt.collectEntries { k, v ->
-			def p = GameData.thing(v)
-			if (!p) throw new IllegalArgumentException('No tile ' + v)
-			else [(k): p]
+		Map<BigInteger, Thing> ittt = new HashMap<>(itt.size(), 1)
+		for (e in itt) {
+			def p = GameData.thing(e.value)
+			if (null == p) throw new IllegalArgumentException('No tile such as ' + e.value)
+			else ittt.put(e.key, p)
 		}
-		while (i != x.capacity()){
-			int tx = new BigInteger((1..a).collect { x.get(i++) } as byte[]) as int
-			int ty = new BigInteger((1..b).collect { x.get(i++) } as byte[]) as int
-			def ti = new BigInteger((1..c).collect { x.get(i++) } as byte[])
-			level.place(tx, ty, itt[ti])
+		while (i.get() <= x.capacity() - xSize - ySize - idSize) {
+			int tx = new BigInteger(ğ(i, x, xSize)) as int
+			int ty = new BigInteger(ğ(i, x, ySize)) as int
+			def ti = new BigInteger(ğ(i, x, idSize))
+			level.place(tx, ty, (Thing) ittt[ti])
 		}
 		level
 	}
 
-	def place(int x, int y, Thing thing){
-		InactiveThing pt = new InactiveThing(level: this,
-			x: x, y: y, thing: thing)
+	private static byte[] ğ(AtomicInteger i, ByteBuffer x, short a) {
+		def r = new byte[a]
+		for (int j = 0; j < a; ++j) {
+			r[j] = x.get(i.getAndIncrement())
+		}
+		r
+	}
+
+	private static byte[] ğ(AtomicInteger i, ByteBuffer x, BigInteger a) {
+		def r = new byte[(int) a]
+		for (int j = 0; j < a; ++j) {
+			r[j] = x.get(i.getAndIncrement())
+		}
+		r
+	}
+
+	InactiveThing place(int x, int y, Thing thing){
+		InactiveThing pt = thing.inactive(this, x, y)
 		if (placements.containsKey(x, y)) placements[x, y] << pt
-		else placements[x, y] = [pt] as LinkedList<InactiveThing>
+		else placements[x, y] = [pt]
 		all << pt
 		pt
 	}
 
-	def remove(InactiveThing pt){
+	void remove(InactiveThing pt){
 		if (null == pt) return
 		placements[pt.x, pt.y]?.removeElement(pt)
 		all.removeElement(pt)
 	}
 
-	def removeTopIn(int x, int y){
-		remove(thingsIn(x, y).with { size() == 0 ? null : last() })
+	void removeTopIn(int x, int y) {
+		def it = thingsIn(x, y)
+		if (!it.empty) remove(it.last())
 	}
 
-	LinkedList<InactiveThing> thingsIn(int x, int y){
-		all.findAll { it.contains(x, y) } as LinkedList<InactiveThing>
+	List<InactiveThing> thingsIn(int x, int y) {
+		def r = new ArrayList<InactiveThing>()
+		for (it in all) if (it.contains(x, y)) r.add(it)
+		r
 	}
 
-	ActiveLevel activate(){
+	ActiveLevel activate() {
 		def x = new ActiveLevel(maxX: maxX, maxY: maxY, data: data)
-		x.things = all.collect {
-			new ActiveThing(level: x, x: it.x, y: it.y, thing: it.thing)
-		} as LinkedList<ActiveThing>
+		def things = new ArrayList<>(all.size())
+		for (it in all) things.add it.thing.activate(x, it)
+		x.things = things
 		x
 	}
 }

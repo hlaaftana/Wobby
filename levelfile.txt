@@ -1,5 +1,5 @@
 Any amount of bytes for text that starts and ends with {},
-  this is JSON data for the level and must exist even if it's empty
+  this is JSON variables for the level and must exist even if it's empty
   must be in UTF-8 i guess
 2 bytes for X byte size (a)
 2 bytes for Y byte size (b)

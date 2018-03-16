@@ -1,21 +1,34 @@
 package hlaaftana.wobby.level
 
+import groovy.transform.CompileStatic
 import hlaaftana.wobby.ui.LevelPlayPanel
 
+@CompileStatic
 class ActiveLevel extends Level {
-	LinkedList<ActiveThing> things = []
+	List<ActiveThing> things = new ArrayList<>()
 	LevelPlayPanel panel
 
-	LinkedList<ActiveThing> thingsIn(int x, int y){
-		things.findAll { it.contains(x, y) } as LinkedList<ActiveThing>
+	List<ActiveThing> thingsIn(int x, int y) {
+		def l = new ArrayList<ActiveThing>()
+		for (it in things) if (it.contains(x, y)) l.add(it)
+		l
 	}
 
-	void initialize(LevelPlayPanel p){
+	void initialize(LevelPlayPanel p) {
 		panel = p
-		things.each { it.thing.initialize(it) }
+		for (it in things) it.thing.initialize(it)
 	}
 
-	void tick(){
-		things.each { it.thing.tick(it) }
+	void tick() {
+		def remove = []
+		for (it in things) {
+			try {
+				it.thing.tick(it)
+			} catch (ex) {
+				ex.printStackTrace()
+				remove << it
+			}
+		}
+		things.removeAll(remove)
 	}
 }

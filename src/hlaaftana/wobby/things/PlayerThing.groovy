@@ -1,196 +1,239 @@
 package hlaaftana.wobby.things
 
+import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import hlaaftana.wobby.level.ActiveLevel
 import hlaaftana.wobby.level.ActiveThing
+import hlaaftana.wobby.level.InactiveThing
 import hlaaftana.wobby.level.Level
 
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 
 @InheritConstructors
+@CompileStatic
 class PlayerThing extends BasicThing {
-	static Map<ActiveThing, Map> datas = [:]
-
-	synchronized startRight(ActiveThing at, KeyEvent e){
-		datas[at].direction = HorDir.RIGHT
-		datas[at].accel_dir = HorDir.RIGHT
-		if (datas[at].decel_dir == HorDir.RIGHT) datas[at].decel_dir = null
+	synchronized void startRight(Player p, KeyEvent e) {
+		p.direction = HorDir.RIGHT
+		p.accel = HorDir.RIGHT
+		if (p.decel == HorDir.RIGHT) p.decel = null
 	}
 
-	synchronized startLeft(ActiveThing at, KeyEvent e){
-		datas[at].direction = HorDir.LEFT
-		datas[at].accel_dir = HorDir.LEFT
-		if (datas[at].decel_dir == HorDir.LEFT) datas[at].decel_dir = null
+	synchronized void startLeft(Player p, KeyEvent e) {
+		p.direction = HorDir.LEFT
+		p.accel = HorDir.LEFT
+		if (p.decel == HorDir.LEFT) p.decel = null
 	}
 
-	synchronized stopRight(ActiveThing at, KeyEvent e){
-		datas[at].accel_dir = null
-		datas[at].decel_dir = HorDir.RIGHT
+	synchronized void stopRight(Player p, KeyEvent e) {
+		p.accel = null
+		p.decel = HorDir.RIGHT
 	}
 
-	synchronized stopLeft(ActiveThing at, KeyEvent e){
-		datas[at].accel_dir = null
-		datas[at].decel_dir = HorDir.LEFT
+	synchronized void stopLeft(Player p, KeyEvent e) {
+		p.accel = null
+		p.decel = HorDir.LEFT
 	}
 
-	synchronized jump(ActiveThing at, KeyEvent e){
-		datas[at].jumping = true
+	synchronized void jump(Player p, KeyEvent e) {
+		p.jumping = true
 	}
 
-	synchronized interruptJump(ActiveThing at, KeyEvent e){
-		datas[at].jumping = false
+	synchronized void interruptJump(Player p, KeyEvent e) {
+		//p.jumping = false
 	}
 
-	synchronized void initialize(ActiveThing at){
+	ActiveThing activate(ActiveLevel level, InactiveThing it) {
+		new Player(x: it.x, y: it.y, level: level, thing: it.thing)
+	}
+
+	synchronized void initialize(ActiveThing at) {
 		super.initialize(at)
-		datas[at] = [horizontal_speeds: [:], fall_speed: 0, direction: HorDir.RIGHT]
-		((ActiveLevel) at.level).panel.addKeyListener(new KeyAdapter(){
+		def p = (Player) at
+		p.level.panel.addKeyListener new KeyAdapter() {
 			@Override
-			void keyPressed(KeyEvent e){
+			void keyPressed(KeyEvent e) {
 				if (e.keyCode == KeyEvent.VK_RIGHT)
-					startRight(at, e)
-				if (e.keyCode == KeyEvent.VK_LEFT)
-					startLeft(at, e)
-				if (e.keyCode == KeyEvent.VK_UP)
-					jump(at, e)
+					startRight(p, e)
+				else if (e.keyCode == KeyEvent.VK_LEFT)
+					startLeft(p, e)
+				else if (e.keyCode == KeyEvent.VK_UP)
+					jump(p, e)
 			}
 
 			@Override
-			void keyReleased(KeyEvent e){
+			void keyReleased(KeyEvent e) {
 				if (e.keyCode == KeyEvent.VK_RIGHT)
-					stopRight(at, e)
-				if (e.keyCode == KeyEvent.VK_LEFT)
-					stopLeft(at, e)
-				if (e.keyCode == KeyEvent.VK_UP)
-					interruptJump(at, e)
+					stopRight(p, e)
+				else if (e.keyCode == KeyEvent.VK_LEFT)
+					stopLeft(p, e)
+				else if (e.keyCode == KeyEvent.VK_UP)
+					interruptJump(p, e)
 			}
-		})
+		}
 	}
 
-	synchronized void tick(ActiveThing at){
+	synchronized void tick(ActiveThing at) {
 		super.tick(at)
-		def d = datas[at]
-		if (d.decel_dir){
-			if (d.horizontal_speeds[d.decel_dir])
-				d.horizontal_speeds[d.decel_dir] = betw(d.horizontal_speeds[d.decel_dir] - 2.5, 10, 0)
+		final p = (Player) at
+
+		if (p.decel) {
+			final o = p.decel.ordinal()
+			if (p.speeds[o]) p.speeds[o] = clamp(p.speeds[o] - 2.5, 10, 0)
 		}
-		if (d.accel_dir){
-			if (!d.horizontal_speeds[d.accel_dir]) d.horizontal_speeds[d.accel_dir] = 0
-			d.horizontal_speeds[d.accel_dir] = betw(d.horizontal_speeds[d.accel_dir] + 2.5, 10, 0)
+
+		if (p.accel) {
+			final o = p.accel.ordinal()
+			p.speeds[o] = clamp(p.speeds[o] + 2.5, 10, 0)
 		}
-		def hzm = d.horizontal_speeds.inject(0){ s, k, v -> s + k * v }
-		if (hzm) at.x += Math.round((hzm <=> 0) * look(at, hzm > 0 ? 1 : 2,
-			(int) Math.abs(Math.round(hzm))))
-		if (datas[at].jumping){
-			if (datas[at].jump_speed) datas[at].jump_speed = [0, datas[at].jump_speed - 0.5].max()
-			else datas[at].jump_speed = 10
-			int ado = look(at, 4, (int) Math.abs(Math.ceil(datas[at].jump_speed)))
-			if (ado) at.y -= Math.round(ado)
-			else { datas[at].jumping = false; datas[at].jump_speed = 0 }
-		}else if (getLevelGravity(at.level) && at.y < at.level.maxY){
-			d.fall_speed += getLevelGravity(at.level)
-			if (d.fall_speed) at.y += Math.round((d.fall_speed <=> 0) *
-				look(at, d.fall_speed > 0 ? 3 : 4, (int) Math.abs(Math.round(d.fall_speed))))
+
+		final hzm = p.speeds[0] - p.speeds[1]
+
+		if (hzm != 0) {
+			final hzmax = (int) Math.round(Math.abs(hzm))
+			if (hzm > 0) p.x += lookLeft(at, hzmax)
+			else p.x -= lookRight(at, hzmax)
+		}
+
+		if (p.jumping) {
+			p.jumpSpeed = p.jumpSpeed ? Math.max(0, p.jumpSpeed - 0.5) : 10
+			int ado = lookUp(p, (int) Math.ceil(p.jumpSpeed))
+			if (ado) p.y -= ado
+			else {
+				p.jumping = false
+				p.jumpSpeed = 0
+				p.fallSpeed = 0
+			}
+		} else if (getLevelGravity(p.level) && p.y < p.level.maxY &&
+				(p.fallSpeed += getLevelGravity(p.level)) != 0) {
+			final fallMax = (int) Math.abs(Math.round(p.fallSpeed))
+			final oldY = p.y
+			if (p.fallSpeed > 0) p.y += lookDown(p, fallMax)
+			else p.y -= lookUp(p, fallMax)
+			//if (p.y - oldY >)
 		}
 	}
 
-	static betw(x, y, z){
+	static double clamp(double x, double y, double z) {
 		if (x > y) return y
 		if (x < z) return z
 		x
 	}
 
-	/// Returns the amount you can move slide to the left slide to the right left look lets dance
-	static int look(ActiveThing at, int dir, int max){
-		if (dir == 1){ // right
-			int mj = max
-			for (y in (0..<at.thing.getTexture(at).height)){
-				def ş = (0..<at.thing.getTexture(at).width).collect { x ->
-					at.thing.universalInterfaces.isXYSolid.with { it ?
-							it(at, x, y) : true }
-				}.reverse().dropWhile { !it }.reverse()
-				int a
-				if (ş) a = ş.size() + at.x
-				else continue
-				int m = 1
-				for (; m <= (max + 1); ++m){
-					if (isSolidAt(at.level, a + m, at.y + y)) break
-				}
-				if (mj > --m) mj = m
-			}
-			return mj
+	static int lookLeft(ActiveThing at, int max) {
+		final width = at.thing.getWidth(at), height = at.thing.getHeight(at)
+		int mj = max
+		for (int y = 0; y < height; ++y) {
+			def ş = widel(at, width, y)
+			if (ş == 0) continue
+			int a = (width - ş) + at.x
+			int m = 1
+			for (; m <= (max + 1); ++m)
+				if (isSolidAt(at.level, a - m, at.y + y))
+					break
+			if (mj > --m) mj = m
 		}
-		if (dir == 2){ // left
-			int mj = max
-			for (y in (0..<at.thing.getTexture(at).height)){
-				def ş = (0..<at.thing.getTexture(at).width).collect { x ->
-					at.thing.universalInterfaces.isXYSolid.with { it ?
-							it(at, x, y) : true }
-				}.dropWhile { !it }
-				int a
-				if (ş) a = (at.thing.getTexture(at).width - ş.size()) + at.x
-				else continue
-				int m = 1
-				for (; m <= (max + 1); ++m){
-					if (isSolidAt(at.level, a - m, at.y + y)) break
-				}
-				if (mj > --m) mj = m
-			}
-			return mj
-		}
-		if (dir == 3){ // down
-			int mj = max
-			for (x in (0..<at.thing.getTexture(at).width)){
-				def ş = (0..<at.thing.getTexture(at).height).collect { y ->
-					at.thing.universalInterfaces.isXYSolid.with { it ?
-							it(at, x, y) : true }
-				}.reverse().dropWhile { !it }.reverse()
-				int a
-				if (ş) a = ş.size() + at.y
-				else continue
-				int m = 1
-				for (; m <= (max + 1); ++m){
-					if (isSolidAt(at.level, at.x + x, a + m)) break
-				}
-				if (mj > --m) mj = m
-			}
-			return mj
-		}
-		if (dir == 4){ // up
-			int mj = max
-			for (x in (0..<at.thing.getTexture(at).width)){
-				def ş = (0..<at.thing.getTexture(at).height).collect { y ->
-					at.thing.universalInterfaces.isXYSolid.with { it ?
-							it(at, x, y) : true }
-				}.dropWhile { !it }
-				int a
-				if (ş) a = (at.thing.getTexture(at).height - ş.size()) + at.y
-				else continue
-				int m = 1
-				for (; m <= (max + 1); ++m){
-					if (isSolidAt(at.level, at.x + x, a - m)) break
-				}
-				if (mj > --m) mj = m
-			}
-			return mj
-		}
-		throw new IllegalArgumentException('Invalid direction')
+		mj
 	}
 
-	static isSolidAt(Level level, int a, int b){
+	static int lookRight(ActiveThing at, int max) {
+		final width = at.thing.getWidth(at), height = at.thing.getHeight(at)
+		int mj = max
+		for (int y = 0; y < height; ++y) {
+			def ş = wider(at, width, y)
+			if (ş == 0) continue
+			int a = ş + at.x
+			int m = 1
+			for (; m <= (max + 1); ++m)
+				if (isSolidAt(at.level, a + m, at.y + y))
+					break
+			if (mj > --m) mj = m
+		}
+		mj
+	}
+
+	static int lookDown(ActiveThing at, int max) {
+		final width = at.thing.getWidth(at), height = at.thing.getHeight(at)
+		int mj = max
+		for (int x = 0; x < width; ++x) {
+			def ş = highr(at, height, x)
+			if (ş == 0) continue
+			int a = ş + at.y
+			int m = 1
+			for (; m <= (max + 1); ++m)
+				if (isSolidAt(at.level, at.x + x, a + m))
+					break
+			if (mj > --m) mj = m
+		}
+		mj
+	}
+
+	static int lookUp(ActiveThing at, int max) {
+		final width = at.thing.getWidth(at), height = at.thing.getHeight(at)
+		int mj = max
+		for (int x = 0; x < width; ++x) {
+			def ş = highl(at, height, x)
+			if (ş == 0) continue
+			int a = (height - ş) + at.y
+			int m = 1
+			for (; m <= (max + 1); ++m)
+				if (isSolidAt(at.level, at.x + x, a - m))
+					break
+			if (mj > --m) mj = m
+		}
+		mj
+	}
+
+	private static int highl(ActiveThing at, int h, int x) {
+		int i = 0
+		while (i < h && !InterfaceWrappers.isXYSolid(at, x, i)) ++i
+		h - i
+	}
+
+	private static int highr(ActiveThing at, int h, int x) {
+		int i = h
+		while (i > 0 && !InterfaceWrappers.isXYSolid(at, x, i - 1)) --i
+		i
+	}
+
+	private static int widel(ActiveThing at, int w, int y) {
+		int i = 0
+		while (i < w && !InterfaceWrappers.isXYSolid(at, i, y)) ++i
+		w - i
+	}
+
+	private static int wider(ActiveThing at, int w, int y) {
+		int i = w
+		while (i > 0 && !InterfaceWrappers.isXYSolid(at, i - 1, y)) --i
+		i
+	}
+
+	static isSolidAt(ActiveLevel level, int a, int b) {
 		def th = level.thingsIn(a, b)
-		for (at in th){
-			def solid = at.thing.universalInterfaces.isXYSolid
-			if (null == solid || solid(at, a - at.x, b - at.y)) return true
+		for (at in th) {
+			if (InterfaceWrappers.isXYSolid(at, a - at.x, b - at.y)) return true
 		}
 		false
 	}
 
-	static getLevelGravity(Level level, defaul = 0.1){
-		level.data.gravity ?: defaul
+	static double getLevelGravity(Level level, double defaul = 0.2) {
+		def x = level.data.gravity
+		null == x ? defaul : (double) x
 	}
+}
 
-	private static enum HorDir { RIGHT(1), LEFT(-1); int x; HorDir(a){ x = a };
-		def multiply(a){ x * a } }
+@CompileStatic
+enum HorDir {
+	RIGHT, LEFT
+}
+
+@CompileStatic
+class Player extends ActiveThing {
+	double[] speeds = new double[2]
+	HorDir direction = HorDir.RIGHT
+	double jumpSpeed
+	double fallSpeed
+	HorDir accel
+	HorDir decel
+	boolean jumping
 }

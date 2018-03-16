@@ -1,5 +1,8 @@
 package hlaaftana.wobby.level
 
-class ActiveThing extends PlacedThing {
+import groovy.transform.CompileStatic
+
+@CompileStatic
+class ActiveThing extends PlacedThing<ActiveLevel> {
 
 }

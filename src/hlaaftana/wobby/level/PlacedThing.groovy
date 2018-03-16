@@ -1,9 +1,11 @@
 package hlaaftana.wobby.level
 
+import groovy.transform.CompileStatic
 import hlaaftana.wobby.things.Thing
 
-abstract class PlacedThing {
-	Level level
+@CompileStatic
+abstract class PlacedThing<L extends Level> {
+	L level
 	Thing thing
 	int x, y
 

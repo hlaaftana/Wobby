@@ -1,5 +1,6 @@
 package hlaaftana.wobby.ui
 
+import groovy.transform.CompileStatic
 import hlaaftana.wobby.GameData
 import hlaaftana.wobby.level.InactiveLevel
 import hlaaftana.wobby.level.InactiveThing
@@ -10,6 +11,7 @@ import javax.swing.*
 
 import hlaaftana.wobby.things.Thing
 
+@CompileStatic
 class LevelBuildFrame extends JFrame {
 	LevelBuildFrame(InactiveLevel l, int width, int height){
 		setSize(width, height)
@@ -20,6 +22,7 @@ class LevelBuildFrame extends JFrame {
 	}
 }
 
+@CompileStatic
 class LevelBuildPanel extends JPanel {
 	LinkedList<InactiveThing> placedThings = []
 	JMenuBar menuBar
@@ -34,78 +37,123 @@ class LevelBuildPanel extends JPanel {
 	int canvasX = 0
 	int canvasY = 0
 
-	LevelBuildPanel(JFrame f, InactiveLevel l){
+	LevelBuildPanel(JFrame f, InactiveLevel l) {
 		level = l
 		frame = f
 		focusable = true
+
 		menuBar = new JMenuBar()
 		editMenu = new JMenu('Edit')
+
 		def mi = new JMenuItem('Undo')
 		mi.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.VK_Z)
-		mi.action = { if (placedThings) level.remove(placedThings.pop()); repaint() } as AbstractAction
+		mi.action = new AbstractAction() {
+			@Override
+			void actionPerformed(ActionEvent e) {
+				if (placedThings) level.remove(placedThings.pop())
+				repaint()
+			}
+		}
 		mi.text = 'Undo'
 		editMenu.add(mi)
+
 		mi = new JMenuItem('Load')
 		loadFile = new JFileChooser()
-		mi.action = {
-			loadFile.showOpenDialog(null)
-			level = InactiveLevel.decode(loadFile.selectedFile.bytes)
-			repaint()
-		} as AbstractAction
+
+		mi.action = new AbstractAction() {
+			@Override
+			void actionPerformed(ActionEvent e) {
+				loadFile.showOpenDialog(null)
+				level = InactiveLevel.decode(loadFile.selectedFile.bytes)
+				repaint()
+			}
+		}
+
 		mi.text = 'Load'
 		editMenu.add(mi)
+
 		mi = new JMenuItem('Save')
 		loadFile = new JFileChooser()
-		mi.action = {
-			loadFile.showSaveDialog(null)
-			loadFile.selectedFile.bytes = level.encode()
-		} as AbstractAction
+
+		mi.action = new AbstractAction() {
+			@Override
+			void actionPerformed(ActionEvent e) {
+				loadFile.showSaveDialog(null)
+				loadFile.selectedFile.bytes = level.encode()
+			}
+		}
+
 		mi.text = 'Save'
 		editMenu.add(mi)
+
 		mi = new JMenuItem('Play')
-		mi.action = {
-			def x = new LevelPlayFrame(level.activate(), frame.width, frame.height)
-			x.visible = true
-		} as AbstractAction
+
+		mi.action = new AbstractAction() {
+			@Override
+			void actionPerformed(ActionEvent e) {
+				def x = new LevelPlayFrame(level.activate(), frame.width, frame.height)
+				x.visible = true
+			}
+		}
+
 		mi.text = 'Play'
 		editMenu.add(mi)
+
 		menuBar.add(editMenu)
+
 		buildMenu = new JMenu('Build')
+
 		mi = new JMenuItem('Set grid')
-		mi.action = {
-			try {
-				gridX = JOptionPane.showInputDialog(null, 'Enter grid width').toInteger()
-				gridY = JOptionPane.showInputDialog(null, 'Enter grid height').toInteger()
-			}catch (ex){
-				JOptionPane.showMessageDialog(null, 'Invalid number.')
+
+		mi.action = new AbstractAction() {
+			@Override
+			void actionPerformed(ActionEvent e) {
+				try {
+					gridX = JOptionPane.showInputDialog(LevelBuildPanel.this, 'Enter grid width').toInteger()
+					gridY = JOptionPane.showInputDialog(LevelBuildPanel.this, 'Enter grid height').toInteger()
+				} catch (ignored) {
+					JOptionPane.showMessageDialog(LevelBuildPanel.this, 'Invalid number.')
+				}
 			}
-		} as AbstractAction
+		}
+
 		mi.text = 'Set grid'
 		buildMenu.add(mi)
+
 		mi = new JMenuItem('Select thing')
-		mi.action = {
-			def t = GameData.thing(JOptionPane.showInputDialog(null, 'Enter thing identifier'))
-			if (t){
-				selectedThing = t
-			}else{
-				JOptionPane.showMessageDialog(null, 'Invalid thing.')
+
+		mi.action = new AbstractAction() {
+			@Override
+			void actionPerformed(ActionEvent e) {
+				def t = GameData.thing(JOptionPane.showInputDialog(LevelBuildPanel.this, 'Enter thing identifier'))
+				if (t) selectedThing = t
+				else JOptionPane.showMessageDialog(LevelBuildPanel.this, 'Invalid thing.')
 			}
-		} as AbstractAction
-		mi.text = 'Clear'
-		buildMenu.add(mi)
-		mi = new JMenuItem('Clear')
-		mi.action = {
-			level.placements.clear()
-			level.all.clear()
-			repaint()
-		} as AbstractAction
+		}
+
 		mi.text = 'Select thing'
 		buildMenu.add(mi)
-		menuBar.add(buildMenu)
-		addMouseListener(new MouseAdapter(){
+
+		mi = new JMenuItem('Clear')
+
+		mi.action = new AbstractAction() {
 			@Override
-			void mousePressed(MouseEvent e){
-				if (e.button == MouseEvent.BUTTON1){
+			void actionPerformed(ActionEvent e) {
+				level.placements.clear()
+				level.all.clear()
+				repaint()
+			}
+		}
+
+		mi.text = 'Clear'
+		buildMenu.add(mi)
+
+		menuBar.add(buildMenu)
+
+		addMouseListener new MouseAdapter() {
+			@Override
+			void mousePressed(MouseEvent e) {
+				if (e.button == MouseEvent.BUTTON1) {
 					if (e.clickCount == 2)
 						selectedThing = level.thingsIn(e.x - canvasX, e.y - canvasY)[0]?.thing
 					else if (selectedThing) {
@@ -118,36 +166,36 @@ class LevelBuildPanel extends JPanel {
 						placedThings << level.place(x, y, selectedThing)
 						repaint()
 					}
-				}else if (e.button == MouseEvent.BUTTON2)
+				} else if (e.button == MouseEvent.BUTTON2)
 					selectedThing = level.thingsIn(e.x - canvasX, e.y - canvasY)[0]?.thing
 				else if (e.button == MouseEvent.BUTTON3) {
 					level.removeTopIn(e.x - canvasX, e.y - canvasY)
 					repaint()
 				}
 			}
-		})
-		addKeyListener(new KeyAdapter(){
+		}
+
+		addKeyListener new KeyAdapter() {
 			@Override
-			void keyPressed(KeyEvent e){
+			void keyPressed(KeyEvent e) {
 				if (e.keyCode == KeyEvent.VK_RIGHT)
 					canvasX = Math.max(canvasX - 10, Math.min(frame.width - level.maxX, 0))
-				if (e.keyCode == KeyEvent.VK_LEFT)
+				else if (e.keyCode == KeyEvent.VK_LEFT)
 					canvasX = Math.min(canvasX + 10, 0)
-				if (e.keyCode == KeyEvent.VK_DOWN)
+				else if (e.keyCode == KeyEvent.VK_DOWN)
 					canvasY = Math.max(canvasY - 10, Math.min(frame.height - level.maxY, 0))
-				if (e.keyCode == KeyEvent.VK_UP)
+				else if (e.keyCode == KeyEvent.VK_UP)
 					canvasY = Math.min(canvasY + 10, 0)
 				repaint()
 			}
-		})
+		}
 	}
 
 	@Override
 	void paintComponent(Graphics g){
 		super.paintComponent(g)
 		Graphics2D g2 = (Graphics2D) g
-		level.all.each { InactiveThing it ->
+		for (it in level.all)
 			g2.drawImage(it.thing.getTexture(it), canvasX + it.x, canvasY + it.y, null)
-		}
 	}
 }
