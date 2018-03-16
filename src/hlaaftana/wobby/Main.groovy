@@ -11,8 +11,8 @@ import javax.swing.*
 @CompileStatic
 class Main {
 	static main(args) {
-		for (t in new File("tiles").list()) {
-			GameData.register(new BasicThing(t - '.png', new File("tiles/$t")))
+		for (t in new File("tiles").list()) if (t.endsWith('.png')) {
+			GameData.register(new BasicThing(t[0..-5], new File("tiles/$t")))
 		}
 		GameData.register(new PlayerThing('player', new File('tiles/blue_crystal_block.png')))
 		InactiveLevel l = new InactiveLevel(maxX: 750, maxY: 450)
