@@ -9,7 +9,7 @@ import hlaaftana.wobby.level.PlacedThing
 import java.awt.image.BufferedImage
 
 @CompileStatic
-class BasicThing extends Thing implements Solidable {
+class BasicThing implements Thing, Solidable {
 	boolean staticTexture = true
 	String identifier
 	BufferedImage texture
@@ -17,20 +17,23 @@ class BasicThing extends Thing implements Solidable {
 	int animationFrame
 
 	BasicThing(String id, img) { identifier = id; texture = Util.toImage(img) }
+	BasicThing(String id, List frames, boolean loop = true) {
+		identifier = id
+		animation = new Animation(loop: loop, frames: new ArrayList<>(frames.size()))
+		for (f in frames) animation.frames.add(Util.toImage(f))
+	}
 
 	BufferedImage getTexture(PlacedThing pt) { texture }
 
 	int getWidth(PlacedThing pt) {
-		if (staticTexture) getMemoizedWidth(pt)
-		else getTexture(pt).width
+		staticTexture ? getMemoizedWidth(pt) : getTexture(pt).width
 	}
 
 	@Memoized
 	private int getMemoizedWidth(PlacedThing pt) { getTexture(pt).width }
 
 	int getHeight(PlacedThing pt) {
-		if (staticTexture) getMemoizedHeight(pt)
-		else getTexture(pt).height
+		staticTexture ? getMemoizedHeight(pt) : getTexture(pt).height
 	}
 
 	@Memoized
@@ -38,16 +41,17 @@ class BasicThing extends Thing implements Solidable {
 
 	boolean isXYSolid(ActiveThing at, int x, int y) {
 		def t = at.thing.getTexture(at)
-		t.colorModel.hasAlpha() ? t.getRGB(x, y) << 24 == 0 : true
+		!t.colorModel.hasAlpha() || t.getRGB(x, y) << 24 == 0
 	}
 
 	void tick(ActiveThing at) {
-		super.tick(at)
 		if (null != animation && (animationFrame != animation.frameCount || animation.loop)) {
 			texture = animation.frames[animationFrame++] ?: texture
 			if (animationFrame >= animation.frameCount && animation.loop) animationFrame = 0
 		}
 	}
+
+	void initialize(ActiveThing at) {}
 }
 
 @CompileStatic

@@ -16,22 +16,22 @@ class PlayerThing extends BasicThing {
 	synchronized void startRight(Player p, KeyEvent e) {
 		p.direction = HorDir.RIGHT
 		p.accel = HorDir.RIGHT
-		if (p.decel == HorDir.RIGHT) p.decel = null
+		if (p.decel == HorDir.RIGHT) p.decel = HorDir.NONE
 	}
 
 	synchronized void startLeft(Player p, KeyEvent e) {
 		p.direction = HorDir.LEFT
 		p.accel = HorDir.LEFT
-		if (p.decel == HorDir.LEFT) p.decel = null
+		if (p.decel == HorDir.LEFT) p.decel = HorDir.NONE
 	}
 
 	synchronized void stopRight(Player p, KeyEvent e) {
-		p.accel = null
+		p.accel = HorDir.NONE
 		p.decel = HorDir.RIGHT
 	}
 
 	synchronized void stopLeft(Player p, KeyEvent e) {
-		p.accel = null
+		p.accel = HorDir.NONE
 		p.decel = HorDir.LEFT
 	}
 
@@ -49,7 +49,7 @@ class PlayerThing extends BasicThing {
 
 	synchronized void initialize(ActiveThing at) {
 		super.initialize(at)
-		def p = (Player) at
+		final Player p = (Player) at
 		p.level.panel.addKeyListener new KeyAdapter() {
 			@Override
 			void keyPressed(KeyEvent e) {
@@ -75,28 +75,27 @@ class PlayerThing extends BasicThing {
 
 	synchronized void tick(ActiveThing at) {
 		super.tick(at)
-		final p = (Player) at
+		final Player p = (Player) at
 
-		if (p.decel) {
-			final o = p.decel.ordinal()
-			if (p.speeds[o]) p.speeds[o] = clamp(p.speeds[o] - 2.5, 10, 0)
+		if (p.decel != HorDir.NONE) {
+			final o = p.decel
+			if (p.speeds[o] != 0) p.speeds[o] = clamp(p.speeds[o] - 2.5d, 10, 0)
 		}
 
-		if (p.accel) {
-			final o = p.accel.ordinal()
-			p.speeds[o] = clamp(p.speeds[o] + 2.5, 10, 0)
+		if (p.accel != HorDir.NONE) {
+			final o = p.accel
+			p.speeds[o] = clamp(p.speeds[o] + 2.5d, 10, 0)
 		}
 
 		final hzm = p.speeds[0] - p.speeds[1]
 
 		if (hzm != 0) {
 			final hzmax = (int) Math.round(Math.abs(hzm))
-			if (hzm > 0) p.x += lookLeft(at, hzmax)
-			else p.x -= lookRight(at, hzmax)
+			p.x = (hzm > 0 ? p.x + lookLeft(at, hzmax) : p.x - lookRight(at, hzmax))
 		}
 
 		if (p.jumping) {
-			p.jumpSpeed = p.jumpSpeed ? Math.max(0, p.jumpSpeed - 0.5) : 10
+			p.jumpSpeed = p.jumpSpeed != 0 ? Math.max(0, p.jumpSpeed - 0.5d) : 10
 			int ado = lookUp(p, (int) Math.ceil(p.jumpSpeed))
 			if (ado) p.y -= ado
 			else {
@@ -208,7 +207,7 @@ class PlayerThing extends BasicThing {
 		i
 	}
 
-	static isSolidAt(ActiveLevel level, int a, int b) {
+	static boolean isSolidAt(ActiveLevel level, int a, int b) {
 		def th = level.thingsIn(a, b)
 		for (at in th) {
 			if (InterfaceWrappers.isXYSolid(at, a - at.x, b - at.y)) return true
@@ -216,24 +215,26 @@ class PlayerThing extends BasicThing {
 		false
 	}
 
-	static double getLevelGravity(Level level, double defaul = 0.2) {
+	static double getLevelGravity(Level level, double defaul = 0.2d) {
 		def x = level.data.gravity
 		null == x ? defaul : (double) x
 	}
 }
 
 @CompileStatic
-enum HorDir {
-	RIGHT, LEFT
+interface HorDir {
+	final int NONE = -1
+	final int RIGHT = 0
+	final int LEFT = 1
 }
 
 @CompileStatic
 class Player extends ActiveThing {
 	double[] speeds = new double[2]
-	HorDir direction = HorDir.RIGHT
+	int direction = HorDir.RIGHT
 	double jumpSpeed
 	double fallSpeed
-	HorDir accel
-	HorDir decel
+	int accel = HorDir.NONE
+	int decel = HorDir.NONE
 	boolean jumping
 }

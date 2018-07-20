@@ -18,7 +18,7 @@ class FixedSizeBasicThing extends BasicThing {
 		width = w
 		height = h
 		def old = texture
-		texture = new BufferedImage(w, h, old.type)
+		super.texture = new BufferedImage(w, h, old.type)
 		final g = texture.createGraphics()
 		g.drawImage(old, w, h, null)
 		g.dispose()

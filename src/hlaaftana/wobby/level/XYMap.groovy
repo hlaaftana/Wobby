@@ -42,5 +42,5 @@ class XYMap<V> implements Map<Long, V> {
 
 	Collection values() { inner.values() }
 
-	Set<Map.Entry> entrySet() { inner.entrySet() }
+	Set<Entry<Long, V>> entrySet() { inner.entrySet() }
 }

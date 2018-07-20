@@ -10,8 +10,7 @@ import java.awt.image.BufferedImage
 
 @CompileStatic
 class LevelSelectorThing extends BasicThing {
-	BufferedImage normalTexture
-	BufferedImage hoverTexture
+	BufferedImage normalTexture, hoverTexture
 	InactiveLevel destination
 
 	LevelSelectorThing(String id, img, hoverimg, InactiveLevel l) {
@@ -53,6 +52,5 @@ class LevelSelectorThing extends BasicThing {
 
 @CompileStatic
 class LevelSelector extends ActiveThing {
-	boolean hovering
-	boolean dead
+	boolean hovering, dead
 }

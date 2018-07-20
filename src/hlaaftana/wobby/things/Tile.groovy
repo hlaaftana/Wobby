@@ -8,34 +8,35 @@ import hlaaftana.wobby.level.PlacedThing
 import java.awt.image.BufferedImage
 
 @CompileStatic
-class Tile extends Thing implements Solidable {
+class Tile implements Thing, Solidable {
 	final String identifier
 	final BufferedImage texture
-	protected boolean[][] notSolid
+	final int width, height
+	protected BitSet solid
 
 	Tile(String id, img) {
 		identifier = id
 		texture = Util.toImage(img)
-		notSolid = new boolean[texture.height][texture.width]
+		width = texture.width
+		height = texture.height
+		solid = new BitSet(height * width)
 		if (texture.colorModel.hasAlpha()) {
-			for (int x = 0; x < notSolid.length; x++) {
-				def a = notSolid[x]
-				for (int y = 0; y < a.length; y++) {
-					a[y] = texture.getRGB(x, y) << 24 != 0
-				}
-				notSolid[x] = a
+			for (int i = 0; i < solid.size(); ++i) {
+				final x = i % width, y = Util.intdiv(i, width)
+				final val = texture.getRGB(x, y) << 24 == 0
+				solid.set(i, val)
 			}
-		}
+		} else solid.set(0, solid.size() - 1, true)
 	}
 
 	@Override
 	boolean isXYSolid(ActiveThing at, int x, int y) {
-		!notSolid[x][y]
+		solid.get(x + y * width)
 	}
 
 	BufferedImage getTexture(PlacedThing pt) { texture }
 
-	int getWidth(PlacedThing pt) { texture.width }
+	int getWidth(PlacedThing pt) { width }
 
-	int getHeight(PlacedThing pt) { texture.height }
+	int getHeight(PlacedThing pt) { height }
 }

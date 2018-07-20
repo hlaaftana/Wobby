@@ -15,18 +15,61 @@ class InactiveLevel extends Level<InactiveThing> {
 	List<InactiveThing> all = new ArrayList<>()
 
 	byte[] encode() {
-		Byte[] j = JsonOutput.toJson(data).getBytes('UTF-8')
-		short a = (short) (maxX as BigInteger).toByteArray().length
-		short b = (short) (maxY as BigInteger).toByteArray().length
-		List<String> identifiers = new ArrayList<>()
-		identifiers.addAll(all*.thing*.identifier.toSet())
-		int largestIdentifier = 0
-		for (it in identifiers)
-			if (it.length() > largestIdentifier)
-				largestIdentifier = it.length()
-		short c = (short) (identifiers.size() as BigInteger).toByteArray().length
-		short d = (short) (largestIdentifier as BigInteger).toByteArray().length
-		List<Byte> x = new ArrayList<>()
+		byte[] j = JsonOutput.toJson(data).getBytes('UTF-8')
+		final maxXBytes = BigInteger.valueOf(maxX).toByteArray(), maxYBytes = BigInteger.valueOf(maxY).toByteArray()
+		short a = (short) maxXBytes.length
+		short b = (short) maxYBytes.length
+		int largestIdentifier = 0, sumIdentifier = 0, lenIdentifier = 0
+		List<String> extraIdentifiers = new ArrayList<>()
+		for (thing in all) {
+			final it = thing.thing.identifier
+			if (extraIdentifiers.contains(it)) continue
+			++lenIdentifier
+			final len = it.length()
+			sumIdentifier += len
+			if (len > largestIdentifier) largestIdentifier = len
+			extraIdentifiers.add(it)
+		}
+		final identifierSizeBytes = BigInteger.valueOf(lenIdentifier).toByteArray()
+		final largestIdentifierBytes = BigInteger.valueOf(largestIdentifier).toByteArray()
+		short c = (short) identifierSizeBytes.length
+		short d = (short) largestIdentifierBytes.length
+		byte[] x = new byte[j.length + 8 + a + b + c + lenIdentifier * (c + d) + sumIdentifier + all.size() * (a + b + c)]
+		int i = 0
+		System.arraycopy(j, 0, x, i, j.length)
+		i += j.length
+		x[i++] = (byte) (a >> 8)
+		x[i++] = (byte) a
+		x[i++] = (byte) (b >> 8)
+		x[i++] = (byte) b
+		x[i++] = (byte) (c >> 8)
+		x[i++] = (byte) c
+		x[i++] = (byte) (d >> 8)
+		x[i++] = (byte) d
+		System.arraycopy(maxXBytes, 0, x, i, a); i += a
+		System.arraycopy(maxYBytes, 0, x, i, b); i += b
+		System.arraycopy(identifierSizeBytes, 0, x, i, identifierSizeBytes.length); i += identifierSizeBytes.length
+		Map<String, Integer> twi = new HashMap<>()
+		for (int ii = 0; ii < lenIdentifier; ++ii) {
+			final t = extraIdentifiers.get(ii)
+			def co = t.getBytes('UTF-8')
+			def ab = BigInteger.valueOf(co.length).toByteArray()
+			final index = BigInteger.valueOf(ii + 1).toByteArray()
+			System.arraycopy(index, 0, x, i + c - index.length, index.length); i += c
+			System.arraycopy(ab, 0, x, i + d - ab.length, ab.length); i += d
+			System.arraycopy(co, 0, x, i, co.length); i += co.length
+			twi[t] = ii + 1
+		}
+		for (it in all) {
+			def ab = BigInteger.valueOf(it.x).toByteArray()
+			System.arraycopy(ab, 0, x, i + a - ab.length, ab.length); i += a
+			def cd = BigInteger.valueOf(it.y).toByteArray()
+			System.arraycopy(cd, 0, x, i + b - cd.length, cd.length); i += b
+			def ef = BigInteger.valueOf(twi[it.thing.identifier]).toByteArray()
+			System.arraycopy(ef, 0, x, i + c - ef.length, ef.length); i += c
+		}
+		x
+		/*List<Byte> x = new ArrayList<>()
 		x.addAll(j)
 		x.add((byte) (a >> 8))
 		x.add((byte) a)
@@ -36,9 +79,9 @@ class InactiveLevel extends Level<InactiveThing> {
 		x.add((byte) c)
 		x.add((byte) (d >> 8))
 		x.add((byte) d)
-		x.addAll((maxX as BigInteger).toByteArray() as Byte[])
-		x.addAll((maxY as BigInteger).toByteArray() as Byte[])
-		x.addAll((identifiers.size() as BigInteger).toByteArray() as Byte[])
+		x.addAll(maxXBytes)
+		x.addAll(maxYBytes)
+		x.addAll(identifierSizeBytes)
 		Map<String, Integer> twi = [:]
 		for (int i = 0; i < identifiers.size(); ++i) {
 			String t = identifiers[i]
@@ -67,7 +110,7 @@ class InactiveLevel extends Level<InactiveThing> {
 			x.addAll(cd1 as Byte[])
 			x.addAll(ef1 as Byte[])
 		}
-		x as byte[]
+		x as byte[]*/
 	}
 
 	static InactiveLevel decode(byte[] bytes) {
@@ -78,7 +121,7 @@ class InactiveLevel extends Level<InactiveThing> {
 		boolean escaped = false
 		for (int iaa = 0; iaa < string.size(); ++iaa) {
 			final ch = string.charAt(iaa)
-			if (currentQuote != 0) {
+			if (currentQuote != ((char) 0)) {
 				if (ch == ((char) '\\')) escaped = true
 				if (!escaped && ch == currentQuote) currentQuote = 0
 			} else {
@@ -103,25 +146,25 @@ class InactiveLevel extends Level<InactiveThing> {
 		short idSize = x.getShort(i.addAndGet(2))
 		short identifierSizeSize = x.getShort(i.addAndGet(2))
 		i.addAndGet(2)
-		level.maxX = (int) new BigInteger(ğ(i, x, xSize))
-		level.maxY = (int) new BigInteger(ğ(i, x, ySize))
-		def tnum = new BigInteger(ğ(i, x, idSize))
-		Map<BigInteger, String> itt = [:]
+		level.maxX = new BigInteger(ğ(i, x, xSize)).intValue()
+		level.maxY = new BigInteger(ğ(i, x, ySize)).intValue()
+		def tnum = new BigInteger(ğ(i, x, idSize)).intValue()
+		def itt = new HashMap<BigInteger, String>(tnum)
 		for (int it = 0; it < tnum; ++it) {
 			def id = new BigInteger(ğ(i, x, idSize))
 			def identifierSize = new BigInteger(ğ(i, x, identifierSizeSize))
 			def iden = new String(ğ(i, x, identifierSize), 'UTF-8')
 			itt[id] = iden
 		}
-		Map<BigInteger, Thing> ittt = new HashMap<>(itt.size(), 1)
-		for (e in itt) {
+		def ittt = new HashMap<BigInteger, Thing>(itt.size(), 1)
+		for (e in itt.entrySet()) {
 			def p = GameData.thing(e.value)
 			if (null == p) throw new IllegalArgumentException('No tile such as ' + e.value)
 			else ittt.put(e.key, p)
 		}
 		while (i.get() <= x.capacity() - xSize - ySize - idSize) {
-			int tx = new BigInteger(ğ(i, x, xSize)) as int
-			int ty = new BigInteger(ğ(i, x, ySize)) as int
+			int tx = new BigInteger(ğ(i, x, xSize)).intValue()
+			int ty = new BigInteger(ğ(i, x, ySize)).intValue()
 			def ti = new BigInteger(ğ(i, x, idSize))
 			level.place(tx, ty, (Thing) ittt[ti])
 		}
@@ -146,9 +189,9 @@ class InactiveLevel extends Level<InactiveThing> {
 
 	InactiveThing place(int x, int y, Thing thing) {
 		InactiveThing pt = thing.inactive(this, x, y)
-		if (placements.containsKey(x, y)) placements[x, y] << pt
+		if (placements.containsKey(x, y)) placements[x, y].add(pt)
 		else placements[x, y] = [pt]
-		all << pt
+		all.add(pt)
 		pt
 	}
 

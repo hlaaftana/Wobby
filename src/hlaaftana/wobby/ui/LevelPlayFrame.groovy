@@ -20,8 +20,7 @@ class LevelPlayFrame extends JFrame {
 class LevelPlayPanel extends JPanel {
 	JFrame frame
 	ActiveLevel level
-	int canvasX = 0
-	int canvasY = 0
+	int canvasX = 0, canvasY = 0
 	boolean inited
 	Thread tickingThread
 
@@ -49,7 +48,6 @@ class LevelPlayPanel extends JPanel {
 					it.thing.getWidth(it), it.thing.getHeight(it), null)
 	}
 
-	@Override
 	void paintComponent(Graphics g) {
 		super.paintComponent(g)
 		if (!inited) initialize()

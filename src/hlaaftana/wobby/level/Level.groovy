@@ -4,9 +4,8 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 abstract class Level<T extends PlacedThing> {
-	Map data = [:]
-	int maxX
-	int maxY
+	Map data = new HashMap()
+	int maxX, maxY
 
 	abstract List<T> thingsIn(int x, int y)
 }

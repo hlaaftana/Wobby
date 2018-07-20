@@ -23,18 +23,15 @@ class LevelBuildFrame extends JFrame {
 
 @CompileStatic
 class LevelBuildPanel extends JPanel {
-	LinkedList<InactiveThing> placedThings = []
+	LinkedList<InactiveThing> placedThings = new LinkedList<>()
 	JMenuBar menuBar
-	JMenu editMenu
-	JMenu buildMenu
+	JMenu editMenu, buildMenu
 	JFileChooser loadFile
 	JFrame frame
 	InactiveLevel level
 	Thing selectedThing
-	int gridX = 0
-	int gridY = 0
-	int canvasX = 0
-	int canvasY = 0
+	int gridX = 0, gridY = 0
+	int canvasX = 0, canvasY = 0
 
 	LevelBuildPanel(JFrame f, InactiveLevel l) {
 		level = l
@@ -47,7 +44,6 @@ class LevelBuildPanel extends JPanel {
 		def mi = new JMenuItem('Undo')
 		mi.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.VK_Z)
 		mi.action = new AbstractAction() {
-			@Override
 			void actionPerformed(ActionEvent e) {
 				if (placedThings) level.remove(placedThings.pop())
 				repaint()
@@ -60,7 +56,6 @@ class LevelBuildPanel extends JPanel {
 		loadFile = new JFileChooser()
 
 		mi.action = new AbstractAction() {
-			@Override
 			void actionPerformed(ActionEvent e) {
 				loadFile.showOpenDialog(null)
 				level = InactiveLevel.decode(loadFile.selectedFile.bytes)
@@ -75,7 +70,6 @@ class LevelBuildPanel extends JPanel {
 		loadFile = new JFileChooser()
 
 		mi.action = new AbstractAction() {
-			@Override
 			void actionPerformed(ActionEvent e) {
 				loadFile.showSaveDialog(null)
 				loadFile.selectedFile.bytes = level.encode()
@@ -88,7 +82,6 @@ class LevelBuildPanel extends JPanel {
 		mi = new JMenuItem('Play')
 
 		mi.action = new AbstractAction() {
-			@Override
 			void actionPerformed(ActionEvent e) {
 				def x = new LevelPlayFrame(level.activate(), frame.width, frame.height)
 				x.visible = true
@@ -105,7 +98,6 @@ class LevelBuildPanel extends JPanel {
 		mi = new JMenuItem('Set grid')
 
 		mi.action = new AbstractAction() {
-			@Override
 			void actionPerformed(ActionEvent e) {
 				try {
 					gridX = JOptionPane.showInputDialog(LevelBuildPanel.this, 'Enter grid width').toInteger()
@@ -150,7 +142,6 @@ class LevelBuildPanel extends JPanel {
 		menuBar.add(buildMenu)
 
 		addMouseListener new MouseAdapter() {
-			@Override
 			void mousePressed(MouseEvent e) {
 				if (e.button == MouseEvent.BUTTON1) {
 					if (e.clickCount == 2)
