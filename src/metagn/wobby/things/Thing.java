@@ -1,6 +1,6 @@
-package hlaaftana.wobby.things;
+package metagn.wobby.things;
 
-import hlaaftana.wobby.level.*;
+import metagn.wobby.level.*;
 
 import java.awt.image.BufferedImage;
 

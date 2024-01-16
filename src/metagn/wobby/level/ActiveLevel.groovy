@@ -1,7 +1,7 @@
-package hlaaftana.wobby.level
+package metagn.wobby.level
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.ui.LevelPlayPanel
+import metagn.wobby.ui.LevelPlayPanel
 
 @CompileStatic
 class ActiveLevel extends Level {

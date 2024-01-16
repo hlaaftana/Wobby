@@ -1,10 +1,10 @@
-package hlaaftana.wobby.level
+package metagn.wobby.level
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.GameData
-import hlaaftana.wobby.things.Thing
+import metagn.wobby.GameData
+import metagn.wobby.things.Thing
 
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger

@@ -1,7 +1,7 @@
-package hlaaftana.wobby.level
+package metagn.wobby.level
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.things.Thing
+import metagn.wobby.things.Thing
 
 @CompileStatic
 abstract class PlacedThing<L extends Level> {

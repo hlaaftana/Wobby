@@ -1,7 +1,7 @@
-package hlaaftana.wobby.ui
+package metagn.wobby.ui
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.level.ActiveLevel
+import metagn.wobby.level.ActiveLevel
 
 import javax.swing.*
 import java.awt.*

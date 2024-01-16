@@ -1,8 +1,8 @@
-package hlaaftana.wobby.things
+package metagn.wobby.things
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.Util
-import hlaaftana.wobby.level.*
+import metagn.wobby.Util
+import metagn.wobby.level.*
 
 import javax.swing.event.MouseInputAdapter
 import java.awt.event.MouseEvent

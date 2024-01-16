@@ -1,10 +1,10 @@
-package hlaaftana.wobby.ui
+package metagn.wobby.ui
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.GameData
-import hlaaftana.wobby.level.InactiveLevel
-import hlaaftana.wobby.level.InactiveThing
-import hlaaftana.wobby.things.Thing
+import metagn.wobby.GameData
+import metagn.wobby.level.InactiveLevel
+import metagn.wobby.level.InactiveThing
+import metagn.wobby.things.Thing
 
 import javax.swing.*
 import java.awt.*

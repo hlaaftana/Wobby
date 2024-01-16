@@ -1,11 +1,11 @@
-package hlaaftana.wobby.things
+package metagn.wobby.things
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
-import hlaaftana.wobby.level.ActiveLevel
-import hlaaftana.wobby.level.ActiveThing
-import hlaaftana.wobby.level.InactiveThing
-import hlaaftana.wobby.level.Level
+import metagn.wobby.level.ActiveLevel
+import metagn.wobby.level.ActiveThing
+import metagn.wobby.level.InactiveThing
+import metagn.wobby.level.Level
 
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent

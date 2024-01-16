@@ -1,9 +1,9 @@
-package hlaaftana.wobby.things
+package metagn.wobby.things
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.Util
-import hlaaftana.wobby.level.ActiveThing
-import hlaaftana.wobby.level.PlacedThing
+import metagn.wobby.Util
+import metagn.wobby.level.ActiveThing
+import metagn.wobby.level.PlacedThing
 
 import java.awt.image.BufferedImage
 

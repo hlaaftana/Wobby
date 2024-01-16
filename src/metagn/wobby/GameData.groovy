@@ -1,7 +1,7 @@
-package hlaaftana.wobby
+package metagn.wobby
 
 import groovy.transform.CompileStatic
-import hlaaftana.wobby.things.Thing
+import metagn.wobby.things.Thing
 
 @CompileStatic
 class GameData {
